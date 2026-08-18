@@ -12,20 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthInputRegister struct {
-	Name     string `json:"name" binding:"required"`
-	UserName string `json:"user_name" binding:"required"`
-	Password string `json:"password" binding:"required,min=6"`
-	RoleID   int    `json:"role_id" binding:"required"`
-}
-
-type AuthInputLogin struct {
-	UserName string `json:"user_name" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 func RegisterUser(context *gin.Context) {
-	var input AuthInputRegister
+	var input models.UserRegisterInput
 
 	err := context.ShouldBindJSON(&input)
 	if err != nil {
@@ -72,7 +60,7 @@ func RegisterUser(context *gin.Context) {
 }
 
 func LoginUser(context *gin.Context) {
-	var input AuthInputLogin
+	var input models.UserLoginInput
 
 	if err := context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

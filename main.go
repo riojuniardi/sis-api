@@ -3,8 +3,7 @@ package main
 import (
 	"log"
 	"sis-api/config"
-	"sis-api/controllers"
-	"sis-api/middlewares"
+	"sis-api/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -20,26 +19,7 @@ func main() {
 
 	server := gin.Default()
 
-	api := server.Group("/api")
-	{
-
-		api.POST("/auth/register", controllers.RegisterUser)
-		api.POST("/auth/login", controllers.LoginUser)
-
-		protected := api.Group("/")
-		protected.Use(middlewares.RequiredAuth())
-		{
-			protected.GET("/users/me", controllers.GetCurrentUser)
-		}
-
-		admin := api.Group("/admin")
-		admin.Use(middlewares.RequiredAdmin())
-		{
-			admin.GET("/users", controllers.GetAllUsers)
-			admin.GET("/users/:id", controllers.GetUserByID)
-		}
-
-	}
+	routes.SetupRoutes(server)
 
 	server.Run(":8080")
 }
