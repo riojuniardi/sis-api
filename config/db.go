@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"sis-api/database/seeders"
 	"sis-api/models"
 
 	"gorm.io/driver/postgres"
@@ -30,5 +31,9 @@ func ConnectDB() {
 	}
 
 	DB = database
+
+	if err := seeders.SeedUsers(DB); err != nil {
+		log.Fatal("Gagal menjalankan seeder:", err)
+	}
 	log.Println("Berhasil terkoneksi ke Database")
 }

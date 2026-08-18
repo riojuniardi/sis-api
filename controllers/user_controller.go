@@ -58,7 +58,6 @@ func RegisterUser(context *gin.Context) {
 		return
 	}
 
-	// Load role relationship
 	config.DB.Preload("Role").First(&user, user.ID)
 
 	context.JSON(http.StatusCreated, gin.H{
@@ -75,20 +74,16 @@ func RegisterUser(context *gin.Context) {
 func LoginUser(context *gin.Context) {
 	var input AuthInputLogin
 
-	err := context.ShouldBindJSON(&input)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var user models.User
-	userData := config.DB.Where("user_name = ?", input.UserName).First(&user).Error
-	if userData != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{
-			"error": "User name tidak terdaftar",
-		})
+
+	err := config.DB.Preload("Role").Where("user_name = ?", input.UserName).First(&user).Error
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "User name tidak terdaftar"})
 		return
 	}
 
