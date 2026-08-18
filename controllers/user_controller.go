@@ -45,8 +45,9 @@ func RegisterUser(context *gin.Context) {
 
 	user := models.User{
 		Name:     input.Name,
-		UserName: input.Name,
+		UserName: input.UserName,
 		Password: string(heshedPassword),
+		RoleID:   input.RoleID,
 	}
 
 	userCreate := config.DB.Create(&user).Error
@@ -56,6 +57,9 @@ func RegisterUser(context *gin.Context) {
 		})
 		return
 	}
+
+	// Load role relationship
+	config.DB.Preload("Role").First(&user, user.ID)
 
 	context.JSON(http.StatusCreated, gin.H{
 		"message": "Berhasil registerasi user",
@@ -114,10 +118,10 @@ func LoginUser(context *gin.Context) {
 		"Message": "Login berhasil",
 		"token":   tokenString,
 		"user": gin.H{
-			"id":       user.ID,
-			"name":     user.Name,
-			"use_name": user.UserName,
-			"role":     user.Role.Name,
+			"id":        user.ID,
+			"name":      user.Name,
+			"user_name": user.UserName,
+			"role":      user.Role.Name,
 		},
 	})
 }
@@ -133,7 +137,7 @@ func GetCurrentUser(context *gin.Context) {
 
 	var user models.User
 
-	userData := config.DB.Preload("Event").First(&user, userId).Error
+	userData := config.DB.Preload("Role").First(&user, userId).Error
 	if userData != nil {
 		context.JSON(http.StatusNotFound, gin.H{
 			"error": "User tidak ditemukan",
@@ -146,6 +150,59 @@ func GetCurrentUser(context *gin.Context) {
 			"id":   user.ID,
 			"name": user.Name,
 			"role": user.Role.Name,
+		},
+	})
+}
+
+// GetAllUsers - Mendapatkan semua user (Admin only)
+func GetAllUsers(context *gin.Context) {
+	var users []models.User
+	result := config.DB.Preload("Role").Find(&users)
+
+	if result.Error != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal mengambil data user",
+		})
+		return
+	}
+
+	var userResponses []gin.H
+	for _, user := range users {
+		userResponses = append(userResponses, gin.H{
+			"id":        user.ID,
+			"name":      user.Name,
+			"user_name": user.UserName,
+			"role":      user.Role.Name,
+		})
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil data user",
+		"users":   userResponses,
+	})
+}
+
+// GetUserByID - Mendapatkan user berdasarkan ID (Admin only)
+func GetUserByID(context *gin.Context) {
+	userID := context.Param("id")
+
+	var user models.User
+	result := config.DB.Preload("Role").First(&user, userID)
+
+	if result.Error != nil {
+		context.JSON(http.StatusNotFound, gin.H{
+			"error": "User tidak ditemukan",
+		})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil data user",
+		"user": gin.H{
+			"id":        user.ID,
+			"name":      user.Name,
+			"user_name": user.UserName,
+			"role":      user.Role.Name,
 		},
 	})
 }

@@ -51,9 +51,17 @@ func RequiredAdmin() gin.HandlerFunc {
 		}
 
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
-		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
+
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusUnauthorized,
+				gin.H{
+					"error": "Token tidak valid",
+				})
+			return
+		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			userID := int(claims["sub"].(float64))
