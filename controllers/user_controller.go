@@ -12,12 +12,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(context *gin.Context) {
+func RegisterUser(c *gin.Context) {
 	var input models.UserRegisterInput
 
-	err := context.ShouldBindJSON(&input)
+	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -25,7 +25,7 @@ func RegisterUser(context *gin.Context) {
 
 	heshedPassword, errHes := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if errHes != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Gagal encripsi Password",
 		})
 		return
@@ -40,7 +40,7 @@ func RegisterUser(context *gin.Context) {
 
 	userCreate := config.DB.Create(&user).Error
 	if userCreate != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "User name mungkin sudah terdaftar",
 		})
 		return
@@ -48,7 +48,7 @@ func RegisterUser(context *gin.Context) {
 
 	config.DB.Preload("Role").First(&user, user.ID)
 
-	context.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "Berhasil registerasi user",
 		"user": gin.H{
 			"id":        user.ID,
@@ -59,11 +59,11 @@ func RegisterUser(context *gin.Context) {
 	})
 }
 
-func LoginUser(context *gin.Context) {
+func LoginUser(c *gin.Context) {
 	var input models.UserLoginInput
 
-	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -71,13 +71,13 @@ func LoginUser(context *gin.Context) {
 
 	err := config.DB.Preload("Role").Where("user_name = ?", input.UserName).First(&user).Error
 	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "User name tidak terdaftar"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User name tidak terdaftar"})
 		return
 	}
 
 	errMatchPassword := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 	if errMatchPassword != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Password salah",
 		})
 		return
@@ -91,13 +91,13 @@ func LoginUser(context *gin.Context) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Gagal membuat token",
 		})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"Message": "Login berhasil",
 		"token":   tokenString,
 		"user": gin.H{
@@ -109,10 +109,10 @@ func LoginUser(context *gin.Context) {
 	})
 }
 
-func GetCurrentUser(context *gin.Context) {
-	userId, exists := context.Get("userID")
+func GetCurrentUser(c *gin.Context) {
+	userId, exists := c.Get("userID")
 	if !exists {
-		context.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Tidak auntentication",
 		})
 		return
@@ -122,13 +122,13 @@ func GetCurrentUser(context *gin.Context) {
 
 	userData := config.DB.Preload("Role").First(&user, userId).Error
 	if userData != nil {
-		context.JSON(http.StatusNotFound, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": "User tidak ditemukan",
 		})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
 			"id":   user.ID,
 			"name": user.Name,
@@ -137,13 +137,12 @@ func GetCurrentUser(context *gin.Context) {
 	})
 }
 
-// GetAllUsers - Mendapatkan semua user (Admin only)
-func GetAllUsers(context *gin.Context) {
+func GetAllUsers(c *gin.Context) {
 	var users []models.User
 	result := config.DB.Preload("Role").Find(&users)
 
 	if result.Error != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Gagal mengambil data user",
 		})
 		return
@@ -159,27 +158,26 @@ func GetAllUsers(context *gin.Context) {
 		})
 	}
 
-	context.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "Berhasil mengambil data user",
 		"users":   userResponses,
 	})
 }
 
-// GetUserByID - Mendapatkan user berdasarkan ID (Admin only)
-func GetUserByID(context *gin.Context) {
-	userID := context.Param("id")
+func GetUserByID(c *gin.Context) {
+	userID := c.Param("id")
 
 	var user models.User
 	result := config.DB.Preload("Role").First(&user, userID)
 
 	if result.Error != nil {
-		context.JSON(http.StatusNotFound, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": "User tidak ditemukan",
 		})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "Berhasil mengambil data user",
 		"user": gin.H{
 			"id":        user.ID,

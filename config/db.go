@@ -25,7 +25,7 @@ func ConnectDB() {
 		log.Fatal("Gagal terkoneksi di database", err)
 	}
 
-	err = database.AutoMigrate(&models.Role{}, models.User{})
+	err = database.AutoMigrate(&models.Role{}, &models.User{}, &models.Category{})
 	if err != nil {
 		log.Fatal("Gagal melakukan migration database :", err)
 	}

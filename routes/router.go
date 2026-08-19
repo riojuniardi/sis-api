@@ -15,4 +15,5 @@ func SetupRoutes(server *gin.Engine) {
 	RegisterAuthRoutes(api)
 	RegisterUserRoutes(api, admin)
 	RegisterCategoryRoutes(api, admin)
+	RegisterLocationRoutes(api, admin)
 }
