@@ -17,4 +17,6 @@ func SetupRoutes(server *gin.Engine) {
 	RegisterCategoryRoutes(api, admin)
 	RegisterLocationRoutes(api, admin)
 	RegisterItemRoutes(api, admin)
+	RegisterBorrowingRoutes(api, admin)
+	RegisterConditionAuditRoutes(api, admin)
 }

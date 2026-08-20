@@ -28,7 +28,7 @@ type Item struct {
 
 	ItemCode      string        `json:"item_code" gorm:"uniqueIndex"`
 	CategoryID    uint          `json:"category_id"`
-	LocationID    uint          `json:"location_id""`
+	LocationID    uint          `json:"location_id"`
 	Name          string        `json:"name"`
 	SourceOfFunds string        `json:"source_of_funds"`
 	PurchaseDate  time.Time     `json:"purchase_date" gorm:"type:date;not null"`
