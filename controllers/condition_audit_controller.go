@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// CREATE AUDIT (Mencatat Audit Kondisi Barang Baru)
 func CreateConditionAudit(c *gin.Context) {
 	var input models.ConditionAuditInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -19,7 +18,6 @@ func CreateConditionAudit(c *gin.Context) {
 		return
 	}
 
-	// 1. Ambil data item terkini untuk mendapatkan ConditionBefore
 	var item models.Item
 	if err := config.DB.WithContext(c.Request.Context()).First(&item, input.ItemID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -30,7 +28,6 @@ func CreateConditionAudit(c *gin.Context) {
 		return
 	}
 
-	// Standardize reason jika kosong
 	if input.Reason == "" {
 		input.Reason = models.ReasonRoutineCheck
 	}
@@ -38,7 +35,6 @@ func CreateConditionAudit(c *gin.Context) {
 	conditionBefore := item.Condition
 	var audit models.ConditionAudit
 
-	// 2. Transaksi Database: Buat Log Audit & Update Kondisi Item
 	err := config.DB.WithContext(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
 		audit = models.ConditionAudit{
 			ItemID:          input.ItemID,
@@ -54,16 +50,13 @@ func CreateConditionAudit(c *gin.Context) {
 			return err
 		}
 
-		// Update kondisi barang di tabel items
 		updates := map[string]interface{}{
 			"condition": input.ConditionAfter,
 		}
 
-		// Jika barang dinilai 'rusak_berat', otomatis ubah status ketersediaan item ke 'perbaikan'
 		if input.ConditionAfter == models.ConditionRusakBerat {
 			updates["status"] = models.StatusPerbaikan
 		} else if conditionBefore == models.ConditionRusakBerat && input.ConditionAfter == models.ConditionBaik && item.Status == models.StatusPerbaikan {
-			// Jika barang selesai diperbaiki (dari rusak berat ke baik), ubah status ketersediaan kembali ke 'tersedia'
 			updates["status"] = models.StatusTersedia
 		}
 
@@ -95,7 +88,6 @@ func CreateConditionAudit(c *gin.Context) {
 	})
 }
 
-// READ ALL AUDITS (Bisa Filter Query Params ?item_id=1)
 func GetAllConditionAudits(c *gin.Context) {
 	var audits []models.ConditionAudit
 	db := config.DB.WithContext(c.Request.Context()).Preload("Item").Preload("User").Preload("Borrowing")
