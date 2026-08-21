@@ -392,24 +392,3 @@ curl "http://localhost:8080/api/condition-audits?item_id=1&user_id=1"
 ├── main.go              # Entry point aplikasi
 └── README.md            # Dokumentasi project
 ```
-
-## Catatan Implementasi
-
-- Tidak ada endpoint health check khusus; keberhasilan startup dapat dicek dari log aplikasi dan request ke endpoint publik seperti `GET /api/items`.
-- Database otomatis dimigrasikan saat aplikasi dijalankan. Pastikan user PostgreSQL memiliki izin membuat dan mengubah tabel.
-- `item_code`, `category.code`, dan `location.code` bersifat unik.
-- Saat pengembalian dengan kondisi `rusak_berat`, status item otomatis menjadi `perbaikan`. Kondisi lain mengembalikan status item menjadi `tersedia`.
-- Saat peminjaman disetujui atau diubah menjadi `dipinjam`, status item menjadi `dipinjam`.
-- Response error menggunakan object JSON dengan format umum `{ "error": "..." }`.
-- Password disimpan menggunakan bcrypt dan tidak dikembalikan pada response API.
-
-## Pengembangan
-
-Format kode dan cek seluruh package dapat dijalankan dengan:
-
-```bash
-gofmt -w .
-go test ./...
-```
-
-Saat ini repository belum memiliki file test khusus. Perintah `go test ./...` tetap berguna untuk memastikan seluruh package dapat dikompilasi.
