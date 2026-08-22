@@ -386,7 +386,7 @@ curl "http://localhost:8080/api/condition-audits?item_id=1&user_id=1"
 ├── middlewares/         # Middleware JWT dan validasi role admin
 ├── models/              # Model GORM dan struktur input JSON
 ├── routes/              # Registrasi route API
-├── .env                 # Konfigurasi lokal, tidak di-commit
+├── .env                 # Konfigurasi
 ├── go.mod               # Module dan dependency Go
 ├── go.sum               # Checksum dependency
 ├── main.go              # Entry point aplikasi
